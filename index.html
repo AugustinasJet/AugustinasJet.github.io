@@ -42,9 +42,6 @@
                 <p class="text-xs text-dark-muted" id="header-subtitle">Select your workout day</p>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="copyFullSource()" class="px-2.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1 shadow-sm transition active:scale-95" title="Copy Full App Code">
-                    <span>📋</span> <span class="hidden sm:inline">Copy Code</span>
-                </button>
                 <button onclick="exportCSV()" class="px-2.5 py-1.5 bg-dark-border hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition active:scale-95 flex items-center gap-1">
                     <span>📥</span> CSV
                 </button>
@@ -75,7 +72,7 @@
             <div class="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-lg" id="timer-display">90</div>
             <div>
                 <p class="text-xs font-semibold text-white" id="timer-label">Rest Timer</p>
-                <p class="text-[10px] text-dark-muted">Tap to pause / adjust</p>
+                <p class="text-[10px] text-dark-muted">Tap to adjust</p>
             </div>
         </div>
         <div class="flex items-center gap-1.5">
@@ -87,7 +84,7 @@
 
     <!-- Log Modal -->
     <div id="log-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
-        <div class="bg-dark-card border border-dark-border w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl transform transition-transform animate-in fade-in slide-in-from-bottom duration-200">
+        <div class="bg-dark-card border border-dark-border w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl">
             <div class="flex items-center justify-between mb-4">
                 <div>
                     <h3 class="text-base font-bold text-white" id="modal-exercise-title">Exercise Name</h3>
@@ -96,7 +93,6 @@
                 <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-dark-border/50 text-dark-muted hover:text-white flex items-center justify-center text-sm font-bold">✕</button>
             </div>
 
-            <!-- Last Log Hint -->
             <div id="last-log-hint" class="mb-4 bg-dark-bg/60 border border-dark-border rounded-xl p-2.5 text-xs text-sky-400 flex items-center justify-between hidden">
                 <span id="last-log-text">Last recorded: --</span>
                 <button onclick="applyLastLog()" class="underline font-semibold hover:text-sky-300">Use Last</button>
@@ -106,22 +102,22 @@
                 <input type="hidden" id="form-exercise-id">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-dark-muted mb-1 uppercase tracking-wider">Weight (kg / lbs)</label>
+                        <label class="block text-xs font-semibold text-dark-muted mb-1 uppercase tracking-wider">Weight (kg)</label>
                         <input type="number" step="0.5" id="form-weight" required placeholder="e.g. 18" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-3 text-white text-base font-semibold focus:outline-none focus:border-sky-500 transition">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-dark-muted mb-1 uppercase tracking-wider">Reps Completed</label>
+                        <label class="block text-xs font-semibold text-dark-muted mb-1 uppercase tracking-wider">Reps</label>
                         <input type="number" id="form-reps" required placeholder="e.g. 10" class="w-full bg-dark-bg border border-dark-border rounded-xl px-3.5 py-3 text-white text-base font-semibold focus:outline-none focus:border-sky-500 transition">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-dark-muted mb-1 uppercase tracking-wider">Rest Timer Duration</label>
+                    <label class="block text-xs font-semibold text-dark-muted mb-1 uppercase tracking-wider">Rest Timer</label>
                     <div class="grid grid-cols-4 gap-2">
-                        <button type="button" onclick="setPresetTimer(45)" class="timer-btn py-2 rounded-xl bg-dark-bg border border-dark-border text-xs font-semibold hover:border-sky-500">45s</button>
-                        <button type="button" onclick="setPresetTimer(60)" class="timer-btn py-2 rounded-xl bg-dark-bg border border-dark-border text-xs font-semibold hover:border-sky-500">60s</button>
-                        <button type="button" onclick="setPresetTimer(90)" class="timer-btn py-2 rounded-xl bg-sky-500/20 border border-sky-500 text-sky-400 text-xs font-semibold" id="default-timer-btn">90s</button>
-                        <button type="button" onclick="setPresetTimer(120)" class="timer-btn py-2 rounded-xl bg-dark-bg border border-dark-border text-xs font-semibold hover:border-sky-500">120s</button>
+                        <button type="button" onclick="setPresetTimer(45, this)" class="timer-btn py-2 rounded-xl bg-dark-bg border border-dark-border text-xs font-semibold hover:border-sky-500 text-dark-muted">45s</button>
+                        <button type="button" onclick="setPresetTimer(60, this)" class="timer-btn py-2 rounded-xl bg-dark-bg border border-dark-border text-xs font-semibold hover:border-sky-500 text-dark-muted">60s</button>
+                        <button type="button" onclick="setPresetTimer(90, this)" class="timer-btn py-2 rounded-xl bg-sky-500/20 border border-sky-500 text-sky-400 text-xs font-semibold">90s</button>
+                        <button type="button" onclick="setPresetTimer(120, this)" class="timer-btn py-2 rounded-xl bg-dark-bg border border-dark-border text-xs font-semibold hover:border-sky-500 text-dark-muted">120s</button>
                     </div>
                 </div>
 
@@ -136,7 +132,7 @@
 
     <!-- Info / Video Modal -->
     <div id="info-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
-        <div class="bg-dark-card border border-dark-border w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl transform transition-transform animate-in fade-in slide-in-from-bottom duration-200">
+        <div class="bg-dark-card border border-dark-border w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-base font-bold text-white flex items-center gap-2" id="info-modal-title">Exercise Guide</h3>
                 <button onclick="closeInfoModal()" class="w-8 h-8 rounded-full bg-dark-border/50 text-dark-muted hover:text-white flex items-center justify-center text-sm font-bold">✕</button>
@@ -162,15 +158,14 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        // Workout Routines Data (Monday, Thursday, Friday)
         const workouts = {
             monday: {
                 title: "Monday: Lower & Upper Base",
                 exercises: [
                     { id: "m1", name: "Backward Sled / Walk", target: "5 mins", starter: "Light / Bodyweight", cues: "Keep core tight, push through balls of feet or pull sled smoothly. Continuous aerobic pace." },
                     { id: "m2", name: "Tibialis Raises", target: "2 × 15-20", starter: "Light bar / Bodyweight", cues: "Full dorsiflexion. Bring toes all the way up toward shins with controlled lowering." },
-                    { id: "m3", name: "Slant Board Calf Raises", target: "2 × 15", starter: "Bodyweight", cues: "Full stretch at the bottom, pause 1 second, explode up to peak plantarflexion." },
-                    { id: "m4", name: "Poliquin / Patrick Step-Ups", target: "2 × 12-15", starter: "Bodyweight or light DBs", cues: "Knee travels forward over toe. Control the descent and tap heel lightly." },
+                    { id: "m3", name: "Slant Board Calf Raises", target: "2 × 15", starter: "Bodyweight", cues: "Full stretch at bottom, pause 1 second, explode up to peak plantarflexion." },
+                    { id: "m4", name: "Poliquin / Patrick Step-Ups", target: "2 × 12-15", starter: "Bodyweight / light DBs", cues: "Knee travels forward over toe. Control the descent and tap heel lightly." },
                     { id: "m5", name: "DB Incline Bench Press", target: "3 × 6-8", starter: "16-20 kg DBs", cues: "Full stretch at bottom, elbows at ~45 degrees, press with control." },
                     { id: "m6", name: "Heel-Elevated Goblet Squats", target: "3 × 8-10", starter: "16-24 kg Kettlebell", cues: "Upright torso, deep ATG depth, knees tracking over toes." },
                     { id: "m7", name: "Overhead DB Shoulder Press", target: "3 × 8-10", starter: "14-16 kg DBs", cues: "Full range from shoulders to overhead lock without arching lower back." },
@@ -184,7 +179,7 @@
                     { id: "t1", name: "Backward Sled / Walk", target: "5 mins", starter: "Light / Bodyweight", cues: "Smooth continuous motion to flush blood into the knees." },
                     { id: "t2", name: "Tibialis Raises", target: "2 × 15-20", starter: "Light bar / Bodyweight", cues: "Full contraction on every rep. Burn in the shin is normal." },
                     { id: "t3", name: "Slant Board Calf Raises", target: "2 × 15", starter: "Bodyweight", cues: "Deep stretch at bottom, pause before driving up." },
-                    { id: "t4", name: "Poliquin / Patrick Step-Ups", target: "2 × 12-15", starter: "Bodyweight or light DBs", cues: "Control descent, keep heel anchored on slant/step." },
+                    { id: "t4", name: "Poliquin / Patrick Step-Ups", target: "2 × 12-15", starter: "Bodyweight / light DBs", cues: "Control descent, keep heel anchored on slant/step." },
                     { id: "t5", name: "DB Bench Press (Flat)", target: "3 × 6-8", starter: "18-22 kg DBs", cues: "Shoulder blades retracted, full chest stretch." },
                     { id: "t6", name: "ATG Split Squat", target: "3 × 5-8/side", starter: "Bodyweight / Light DBs", cues: "Front knee over toe, back knee fully flexed, hip crease below knee." },
                     { id: "t7", name: "Seated DB Shoulder Press", target: "3 × 8-10", starter: "14-16 kg DBs", cues: "Strict form, smooth reversal at bottom." },
@@ -197,8 +192,8 @@
                 exercises: [
                     { id: "f1", name: "Backward Sled / Walk", target: "5 mins", starter: "Light / Bodyweight", cues: "Warm-up knees and lower body tissues." },
                     { id: "f2", name: "Tibialis Raises", target: "2 × 15-20", starter: "Light bar / Bodyweight", cues: "High rep endurance for shin muscles." },
-                    { id: "f3", name: "Slant Board Calf Raises", target: "2 × 15", starter: "Bodyweight", cues: "Full rangecalf isolation." },
-                    { id: "f4", name: "ATG Lunges / Step-Ups", target: "2 × 12-15", starter: "Bodyweight or light DBs", cues: "Deep knee bend and hip opening." },
+                    { id: "f3", name: "Slant Board Calf Raises", target: "2 × 15", starter: "Bodyweight", cues: "Full range calf isolation." },
+                    { id: "f4", name: "ATG Lunges / Step-Ups", target: "2 × 12-15", starter: "Bodyweight / light DBs", cues: "Deep knee bend and hip opening." },
                     { id: "f5", name: "DB Rows / Chest Supported Rows", target: "3 × 8-10", starter: "18-24 kg DBs", cues: "Pull to hip, squeeze upper back, controlled negative." },
                     { id: "f6", name: "RDL (Romanian Deadlifts)", target: "3 × 8-10", starter: "40-60 kg Barbell / DBs", cues: "Hips back, flat back, intense hamstring stretch." },
                     { id: "f7", name: "Lat Pulldowns / Pull-ups", target: "3 × 8-10", starter: "Moderate / Bodyweight", cues: "Drive elbows down, chest proud." },
@@ -214,9 +209,7 @@
         let activeTimerInterval = null;
         let remainingSeconds = 0;
 
-        // Initialize App
         function init() {
-            // Check saved day or default to monday
             const savedDay = localStorage.getItem('atg_current_day');
             if (savedDay && workouts[savedDay]) {
                 currentDay = savedDay;
@@ -231,9 +224,8 @@
         }
 
         function renderDay() {
-            // Update tabs styling
             ['monday', 'thursday', 'friday'].forEach(d => {
-                const btn = document.getElementById(`tab-${d}`);
+                const btn = document.getElementById('tab-' + d);
                 if (d === currentDay) {
                     btn.className = "py-2.5 text-xs font-bold rounded-xl transition text-center shadow-sm bg-sky-600 text-white shadow-sky-600/30";
                 } else {
@@ -249,17 +241,11 @@
 
             routine.exercises.forEach((ex, index) => {
                 const logs = workoutLogs[ex.id] || [];
-                const lastLog = logs.length > 0 ? logs[logs.length - 1] : null;
-
                 let historyHtml = '';
                 if (logs.length > 0) {
                     const recent = logs.slice(-3).reverse();
-                    historyHtml = `
-                        <div class="mt-2.5 pt-2 border-t border-dark-border/60 flex flex-wrap gap-1.5 items-center">
-                            <span class="text-[10px] uppercase font-bold text-dark-muted">Recent:</span>
-                            ${recent.map(l => `<span class="px-2 py-0.5 bg-dark-bg border border-dark-border rounded-md text-[11px] font-semibold text-sky-400">${l.weight}kg × ${l.reps}</span>`).join('')}
-                        </div>
-                    `;
+                    const chips = recent.map(l => '<span class="px-2 py-0.5 bg-dark-bg border border-dark-border rounded-md text-[11px] font-semibold text-sky-400">' + l.weight + 'kg × ' + l.reps + '</span>').join('');
+                    historyHtml = '<div class="mt-2.5 pt-2 border-t border-dark-border/60 flex flex-wrap gap-1.5 items-center"><span class="text-[10px] uppercase font-bold text-dark-muted">Recent:</span>' + chips + '</div>';
                 }
 
                 const card = document.createElement('div');
@@ -277,7 +263,167 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <button onclick="openInfoModal('${encodeURIComponent(ex.name)}', '${encodeURIComponent(ex.cues)}')" class="px-2.5 py-2 bg-dark-border/60 hover:bg-dark-border text-dark-muted hover:text-white rounded-xl text-xs font-semibold transition active:scale-95 flex items-center gap-1" title="Exercise Guide & Videos">
+                            <button onclick="openInfoModal('${encodeURIComponent(ex.name)}', '${encodeURIComponent(ex.cues)}')" class="px-2.5 py-2 bg-dark-border/60 hover:bg-dark-border text-dark-muted hover:text-white rounded-xl text-xs font-semibold transition active:scale-95 flex items-center gap-1">
                                 <span>ℹ️</span> Guide
                             </button>
-                            <button onclick="openLogModal('${ex.id}', '${encodeURIComponent(ex.name)}', '${ex.target}')" class="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold transition active:scale-95 shadow-sm shad
+                            <button onclick="openLogModal('${ex.id}', '${encodeURIComponent(ex.name)}', '${ex.target}')" class="px-3.5 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold transition active:scale-95 shadow-sm shadow-sky-600/30 flex items-center gap-1">
+                                <span>⚡</span> Log
+                            </button>
+                        </div>
+                    </div>
+                    ${historyHtml}
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        function openLogModal(id, name, target) {
+            document.getElementById('form-exercise-id').value = id;
+            document.getElementById('modal-exercise-title').textContent = decodeURIComponent(name);
+            document.getElementById('modal-exercise-target').textContent = 'Target: ' + target;
+            
+            const logs = workoutLogs[id] || [];
+            const hintBox = document.getElementById('last-log-hint');
+            if (logs.length > 0) {
+                const last = logs[logs.length - 1];
+                document.getElementById('last-log-text').textContent = 'Last: ' + last.weight + 'kg × ' + last.reps + ' reps';
+                hintBox.classList.remove('hidden');
+            } else {
+                hintBox.classList.add('hidden');
+            }
+
+            document.getElementById('form-weight').value = '';
+            document.getElementById('form-reps').value = '';
+            document.getElementById('log-modal').classList.remove('hidden');
+            document.getElementById('form-weight').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('log-modal').classList.add('hidden');
+        }
+
+        function applyLastLog() {
+            const id = document.getElementById('form-exercise-id').value;
+            const logs = workoutLogs[id] || [];
+            if (logs.length > 0) {
+                const last = logs[logs.length - 1];
+                document.getElementById('form-weight').value = last.weight;
+                document.getElementById('form-reps').value = last.reps;
+            }
+        }
+
+        function openInfoModal(name, cues) {
+            const decodedName = decodeURIComponent(name);
+            const decodedCues = decodeURIComponent(cues);
+            document.getElementById('info-modal-title').textContent = decodedName;
+            document.getElementById('info-modal-cues').textContent = decodedCues;
+
+            document.getElementById('info-yt-link').href = 'https://www.youtube.com/results?search_query=ATG+' + encodeURIComponent(decodedName);
+            document.getElementById('info-google-link').href = 'https://www.google.com/search?q=' + encodeURIComponent(decodedName + ' exercise form ATG');
+
+            document.getElementById('info-modal').classList.remove('hidden');
+        }
+
+        function closeInfoModal() {
+            document.getElementById('info-modal').classList.add('hidden');
+        }
+
+        function setPresetTimer(secs, btnEl) {
+            selectedTimerSeconds = secs;
+            document.querySelectorAll('.timer-btn').forEach(btn => {
+                btn.className = "timer-btn py-2 rounded-xl bg-dark-bg border border-dark-border text-xs font-semibold hover:border-sky-500 text-dark-muted";
+            });
+            btnEl.className = "timer-btn py-2 rounded-xl bg-sky-500/20 border border-sky-500 text-sky-400 text-xs font-semibold";
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('form-exercise-id').value;
+            const weight = parseFloat(document.getElementById('form-weight').value);
+            const reps = parseInt(document.getElementById('form-reps').value);
+
+            if (!workoutLogs[id]) workoutLogs[id] = [];
+            workoutLogs[id].push({
+                date: new Date().toISOString(),
+                day: currentDay,
+                weight: weight,
+                reps: reps
+            });
+
+            localStorage.setItem('atg_workout_logs', JSON.stringify(workoutLogs));
+            closeModal();
+            renderDay();
+
+            startRestTimer(selectedTimerSeconds);
+        }
+
+        function startRestTimer(seconds) {
+            if (activeTimerInterval) clearInterval(activeTimerInterval);
+            remainingSeconds = seconds;
+            
+            const card = document.getElementById('timer-card');
+            card.classList.remove('hidden');
+            updateTimerDisplay();
+
+            activeTimerInterval = setInterval(() => {
+                remainingSeconds--;
+                updateTimerDisplay();
+                if (remainingSeconds <= 0) {
+                    clearInterval(activeTimerInterval);
+                    card.classList.add('hidden');
+                    playBeep();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(remainingSeconds / 60);
+            const secs = remainingSeconds % 60;
+            document.getElementById('timer-display').textContent = mins > 0 ? mins + ':' + (secs < 10 ? '0' : '') + secs : secs;
+        }
+
+        function adjustTimer(amount) {
+            remainingSeconds = Math.max(0, remainingSeconds + amount);
+            updateTimerDisplay();
+            if (remainingSeconds <= 0) stopTimer();
+        }
+
+        function stopTimer() {
+            if (activeTimerInterval) clearInterval(activeTimerInterval);
+            document.getElementById('timer-card').classList.add('hidden');
+        }
+
+        function playBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = 587.33;
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.4);
+            } catch (err) {}
+        }
+
+        function exportCSV() {
+            let csv = 'ExerciseID,Day,Date,Weight,Reps\n';
+            for (const [id, logs] of Object.entries(workoutLogs)) {
+                logs.forEach(l => {
+                    csv += `"${id}","${l.day}","${l.date}",${l.weight},${l.reps}\n`;
+                });
+            }
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'atg_workout_logs_' + new Date().toISOString().slice(0,10) + '.csv');
+            a.click();
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
