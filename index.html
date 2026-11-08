@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ATG + BTB Workout Logger</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+              accent: '#3b82f6'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Tone.js for Timer Sound Effects -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+  <style>
+    /* Custom scrollbar and mobile tweaks */
+    body {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between pb-20 select-none">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur border-b border-slate-800 px-4 py-3 flex justify-between items-center">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center font-bold text-white shadow-lg shadow-brand-600/30">
+        <i class="fa-solid fa-bolt text-sm"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-base tracking-wide text-white leading-none">ATG + BTB</h1>
+        <span class="text-xs text-brand-500 font-medium">Bulletproof Logger</span>
+      </div>
+    </div>
+    
+    <!-- Rest Timer Widget in Header -->
+    <div id="timer-widget" class="hidden items-center bg-slate-800 rounded-full px-3 py-1 border border-slate-700 gap-2">
+      <i class="fa-solid fa-stopwatch text-brand-500 text-xs animate-pulse"></i>
+      <span id="timer-display" class="font-mono text-sm font-bold text-brand-500">00:00</span>
+      <button onclick="stopTimer()" class="text-slate-400 hover:text-red-400 text-xs ml-1">
+        <i class="fa-solid fa-circle-xmark"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="flex-1 max-w-md w-full mx-auto p-4 space-y-4">
+
+    <!-- ROUTINE / WORKOUT LOGGER VIEW -->
+    <section id="view-workout" class="space-y-4">
+      <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-4 rounded-2xl border border-slate-800 flex justify-between items-center shadow-md">
+        <div>
+          <h2 class="text-lg font-bold text-white">Daily Workout Routine</h2>
+          <p class="text-xs text-slate-400">Knee & Joint ATG Bulletproof</p>
+        </div>
+        <button onclick="clearCurrentSession()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">
+          Reset Selected
+        </button>
+      </div>
+
+      <!-- DAY SELECTOR TABS -->
+      <div class="grid grid-cols-3 gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+        <button onclick="switchDay('Monday')" id="day-tab-Monday" class="py-2 text-xs font-bold rounded-lg transition bg-brand-600 text-white shadow">
+          Monday
+        </button>
+        <button onclick="switchDay('Thursday')" id="day-tab-Thursday" class="py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white">
+          Thursday
+        </button>
+        <button onclick="switchDay('Friday')" id="day-tab-Friday" class="py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white">
+          Friday
+        </button>
+      </div>
+
+      <!-- Quick Timer Launcher -->
+      <div class="bg-slate-900 rounded-xl p-3 border border-slate-800 flex items-center justify-between">
+        <span class="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+          <i class="fa-solid fa-stopwatch text-slate-500"></i> Rest Timer:
+        </span>
+        <div class="flex gap-2">
+          <button onclick="startTimer(60)" class="bg-slate-800 hover:bg-slate-700 active:bg-brand-600 text-xs font-semibold px-2.5 py-1 rounded-lg border border-slate-700 transition">60s</button>
+          <button onclick="startTimer(90)" class="bg-slate-800 hover:bg-slate-700 active:bg-brand-600 text-xs font-semibold px-2.5 py-1 rounded-lg border border-slate-700 transition">90s</button>
+          <button onclick="startTimer(120)" class="bg-slate-800 hover:bg-slate-700 active:bg-brand-600 text-xs font-semibold px-2.5 py-1 rounded-lg border border-slate-700 transition">120s</button>
+        </div>
+      </div>
+
+      <!-- Exercise List Accordions -->
+      <div id="exercise-list" class="space-y-3">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- EXERCISE DIRECTORY VIEW -->
+    <section id="view-directory" class="hidden space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold">ATG Exercise Directory</h2>
+        <span class="text-xs text-slate-400">Target Standards</span>
+      </div>
+      <div id="directory-list" class="space-y-3">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- HISTORY LOG VIEW -->
+    <section id="view-history" class="hidden space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold">Workout History</h2>
+        <button onclick="exportCSV()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 shadow">
+          <i class="fa-solid fa-file-export"></i> Export CSV
+        </button>
+      </div>
+      <div id="history-container" class="space-y-3">
+        <!-- History items rendered dynamically -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur border-t border-slate-800 px-6 py-2">
+    <div class="max-w-md mx-auto flex justify-around items-center">
+      <button onclick="switchTab('workout')" id="nav-workout" class="flex flex-col items-center gap-1 text-brand-500">
+        <i class="fa-solid fa-dumbbell text-lg"></i>
+        <span class="text-[10px] font-medium">Workout</span>
+      </button>
+      <button onclick="switchTab('directory')" id="nav-directory" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
+        <i class="fa-solid fa-book-open text-lg"></i>
+        <span class="text-[10px] font-medium">Directory</span>
+      </button>
+      <button onclick="switchTab('history')" id="nav-history" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200">
+        <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+        <span class="text-[10px] font-medium">History</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Application Logic & Service Worker -->
+  <script>
+    // --- MULTI-DAY ROUTINES DATA ---
+    const WORKOUT_ROUTINES = {
+      Monday: [
+        { id: 'm1', name: 'Backward Sled / Walk', target: '5 mins', starter: 'Light / Bodyweight', notes: 'Warm up knees, pump oxygen into joints.' },
+        { id: 'm2', name: 'Tibialis Raises', target: '2 × 15-20', starter: 'Light bar / Bodyweight', notes: 'First line of ankle & shin defense.' },
+        { id: 'm3', name: 'Slant Board Calf Raises', target: '2 × 15', starter: 'Bodyweight', notes: 'Full stretch at bottom, squeeze at top.' },
+        { id: 'm4', name: 'Poliquin / Patrick Step-Ups', target: '2 × 12-15', starter: 'Bodyweight or light DBs', notes: 'VMO activation, full heel elev.' },
+        { id: 'm5', name: 'DB Incline Bench Press', target: '3 × 6-8', starter: '16-20 kg DBs', notes: 'Upper chest & shoulder stability.' },
+        { id: 'm6', name: 'Heel-Elevated Goblet Squats', target: '3 × 8-10', starter: '16-24 kg KB', notes: 'Full depth squat with upright torso.' },
+        { id: 'm7', name: 'Overhead DB Shoulder Press', target: '3 × 8-10', starter: '14-16 kg DBs', notes: 'Strict overhead pressing strength.' },
+        { id: 'm8', name: 'Triceps Overhead Extension', target: '3 × 10-12', starter: '12-16 kg DB/Cable', notes: 'Elbow resilience & long head tricep.' },
+        { id: 'm9', name: 'Couch Stretch', target: '2 × 45s / side', starter: 'Bodyweight', notes: 'Hip flexor & quad opening.' }
+      ],
+      Thursday: [
+        { id: 't1', name: 'Backward Sled / Walk', target: '5 mins', starter: 'Light / Bodyweight', notes: 'Joint warmth & blood flow.' },
+        { id: 't2', name: 'KOT Calf Raises', target: '2 × 15-20', starter: 'Bodyweight', notes: 'Knees-over-toes calves focus.' },
+        { id: 't3', name: 'Tibialis Raises', target: '2 × 15-20', starter: 'Bodyweight', notes: 'Shin deceleration strength.' },
+        { id: 't4', name: 'Nordics / Hamstring Curl', target: '3 × 5-8', starter: 'Bodyweight / Banded', notes: 'Eccentric hamstring bulletproofing.' },
+        { id: 't5', name: 'Pull-ups / Lat Pulldown', target: '3 × 8-10', starter: 'Bodyweight / Lat Machine', notes: 'Upper back width and pull strength.' },
+        { id: 't6', name: 'Seated DB Power Clean / Ext. Rot.', target: '3 × 10-12', starter: '6-10 kg DBs', notes: 'Rotator cuff and upper back health.' },
+        { id: 't7', name: 'Romanian Deadlift (RDL)', target: '3 × 8-10', starter: 'Barbell / DBs', notes: 'Posterior chain loading.' },
+        { id: 't8', name: 'Face Pulls / Band Pull-aparts', target: '3 × 15-20', starter: 'Band / Cable', notes: 'Posture & rear delts.' },
+        { id: 't9', name: 'Elephant Walk / Jefferson Curl', target: '2 × 10-12', starter: 'Light DBs', notes: 'Hamstring & spinal flexibility.' }
+      ],
+      Friday: [
+        { id: 'f1', name: 'Backward Sled / Walk', target: '5 mins', starter: 'Light / Bodyweight', notes: 'Warm up knees.' },
+        { id: 'f2', name: 'Tibialis Raises', target: '2 × 15-20', starter: 'Light bar / Bodyweight', notes: 'Lower leg balance.' },
+        { id: 'f3', name: 'Slant Board Calf Raises', target: '2 × 15', starter: 'Bodyweight', notes: 'Gastrocnemius stretch & build.' },
+        { id: 'f4', name: 'ATG Split Squat', target: '3 × 5 / leg', starter: 'Bodyweight / Light DBs', notes: 'Ankle mobility & hip flexor stretch.' },
+        { id: 'f5', name: 'Flat DB Bench Press / Dip', target: '3 × 8-10', starter: 'DBs', notes: 'Chest pressing strength.' },
+        { id: 'f6', name: 'DB Chest Supported Row / Bent Row', target: '3 × 8-10', starter: 'DBs', notes: 'Mid-back horizontal pull.' },
+        { id: 'f7', name: 'DB Lateral Raises', target: '3 × 12-15', starter: 'DBs', notes: 'Lateral shoulder development.' },
+        { id: 'f8', name: 'Bicep Curls', target: '3 × 10-12', starter: 'DBs', notes: 'Elbow flexor bulletproofing.' },
+        { id: 'f9', name: 'Hip Flexor Stretch', target: '2 × 60s / side', starter: 'Bodyweight', notes: 'Hip mobility & lumbar relief.' }
+      ]
+    };
+
+    // --- STATE MANAGEMENT ---
+    let currentDay = localStorage.getItem('atg_selected_day') || 'Monday';
+    let workoutState = JSON.parse(localStorage.getItem('atg_current_workout')) || {};
+    let workoutHistory = JSON.parse(localStorage.getItem('atg_history')) || [];
+    let timerInterval = null;
+    let timerRemaining = 0;
+
+    // --- INITIALIZATION ---
+    window.addEventListener('DOMContentLoaded', () => {
+      switchDay(currentDay);
+      renderDirectoryView();
+      renderHistoryView();
+      initPWA();
+    });
+
+    function switchDay(day) {
+      currentDay = day;
+      localStorage.setItem('atg_selected_day', day);
+
+      ['Monday', 'Thursday', 'Friday'].forEach(d => {
+        const btn = document.getElementById(`day-tab-${d}`);
+        if (d === day) {
+          btn.className = 'py-2 text-xs font-bold rounded-lg transition bg-brand-600 text-white shadow';
+        } else {
+          btn.className = 'py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white';
+        }
+      });
+
+      renderWorkoutView();
+    }
+
+    // --- RENDER LOGIC ---
+    function renderWorkoutView() {
+      const container = document.getElementById('exercise-list');
+      container.innerHTML = '';
+      const currentExercises = WORKOUT_ROUTINES[currentDay];
+
+      currentExercises.forEach((ex, idx) => {
+        const loggedData = workoutState[ex.id] || [];
+        const isCompleted = loggedData.length > 0;
+
+        const card = document.createElement('div');
+        card.className = `bg-slate-900 border ${isCompleted ? 'border-brand-500/40 bg-slate-900/90' : 'border-slate-800'} rounded-2xl p-4 transition shadow-sm`;
+
+        card.innerHTML = `
+          <div class="flex justify-between items-start gap-2">
+            <div>
+              <span class="text-[10px] font-bold text-brand-500 uppercase tracking-wider">${currentDay} • 0${idx + 1}</span>
+              <h3 class="font-bold text-base text-white leading-tight">${ex.name}</h3>
+              <div class="flex gap-2 text-xs text-slate-400 mt-1">
+                <span><i class="fa-solid fa-bullseye text-brand-500 text-[10px]"></i> ${ex.target}</span>
+                <span>•</span>
+                <span><i class="fa-solid fa-weight-hanging text-slate-500 text-[10px]"></i> ${ex.starter}</span>
+              </div>
+            </div>
+            ${isCompleted ? '<span class="bg-brand-500/10 text-brand-400 border border-brand-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-check"></i> Logged</span>' : ''}
+          </div>
+
+          <!-- Logged Sets Listing -->
+          <div id="sets-container-${ex.id}" class="mt-3 space-y-1.5">
+            ${loggedData.map((s, i) => `
+              <div class="flex justify-between items-center text-xs bg-slate-950/60 border border-slate-800 rounded-lg px-3 py-1.5">
+                <span class="text-slate-400 font-medium">Set ${i + 1}</span>
+                <span class="font-semibold text-white">${s.weight} kg × ${s.reps} reps</span>
+                <button onclick="removeSet('${ex.id}', ${i})" class="text-slate-500 hover:text-red-400">
+                  <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- Inline Quick Entry Form -->
+          <div class="mt-3 pt-3 border-t border-slate-800/80 flex gap-2">
+            <input type="number" id="weight-${ex.id}" placeholder="kg" class="w-1/3 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-center font-semibold text-white focus:outline-none focus:border-brand-500" />
+            <input type="number" id="reps-${ex.id}" placeholder="reps" class="w-1/3 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-center font-semibold text-white focus:outline-none focus:border-brand-500" />
+            <button onclick="logSet('${ex.id}')" class="w-1/3 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition">
+              <i class="fa-solid fa-plus text-[10px]"></i> Log Set
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // Save Workout Button at Bottom
+      const saveBtnContainer = document.createElement('div');
+      saveBtnContainer.className = 'pt-2';
+      saveBtnContainer.innerHTML = `
+        <button onclick="finishSession()" class="w-full bg-slate-800 hover:bg-slate-700 border border-brand-500/30 text-brand-400 font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg">
+          <i class="fa-solid fa-floppy-disk"></i> Save ${currentDay} Workout Session
+        </button>
+      `;
+      container.appendChild(saveBtnContainer);
+    }
+
+    function renderDirectoryView() {
+      const container = document.getElementById('directory-list');
+      let html = '';
+      Object.keys(WORKOUT_ROUTINES).forEach(day => {
+        html += `<h3 class="text-sm font-bold text-brand-500 uppercase tracking-wide mt-4 first:mt-0">${day} Routine</h3>`;
+        html += WORKOUT_ROUTINES[day].map(ex => `
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 mt-2">
+            <h4 class="font-bold text-white text-base">${ex.name}</h4>
+            <p class="text-xs text-slate-400 mt-1">${ex.notes}</p>
+            <div class="mt-3 flex gap-3 text-xs bg-slate-950 p-2.5 rounded-lg border border-slate-800/80">
+              <div>
+                <span class="text-slate-500 text-[10px] block">TARGET</span>
+                <span class="font-semibold text-brand-400">${ex.target}</span>
+              </div>
+              <div class="border-l border-slate-800 pl-3">
+                <span class="text-slate-500 text-[10px] block">STARTER</span>
+                <span class="font-semibold text-slate-200">${ex.starter}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      });
+      container.innerHTML = html;
+    }
+
+    function renderHistoryView() {
+      const container = document.getElementById('history-container');
+      if (workoutHistory.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-10 text-slate-500 bg-slate-900 border border-slate-800 rounded-xl p-6">
+            <i class="fa-solid fa-calendar-xmark text-3xl mb-2"></i>
+            <p class="text-sm">No saved workouts yet. Complete a session to view history!</p>
+          </div>
+        `;
+        return;
+      }
+
+      const allExercises = [].concat(...Object.values(WORKOUT_ROUTINES));
+
+      container.innerHTML = workoutHistory.map(session => `
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+            <div>
+              <span class="text-xs font-bold text-brand-500"><i class="fa-regular fa-calendar"></i> ${session.date}</span>
+              <span class="text-[10px] bg-slate-800 text-slate-300 font-semibold px-2 py-0.5 rounded ml-2">${session.day || 'Workout'}</span>
+            </div>
+            <span class="text-xs text-slate-400">${session.totalSets} total sets</span>
+          </div>
+          <div class="space-y-2">
+            ${Object.entries(session.data).map(([exId, sets]) => {
+              const ex = allExercises.find(e => e.id === exId);
+              return `
+                <div class="text-xs">
+                  <div class="font-semibold text-slate-200">${ex ? ex.name : exId}</div>
+                  <div class="text-slate-400 text-[11px] font-mono">
+                    ${sets.map(s => `${s.weight}kg × ${s.reps}`).join(' | ')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- LOGIC & DATA OPERATIONS ---
+    function logSet(exId) {
+      const weightInput = document.getElementById(`weight-${exId}`);
+      const repsInput = document.getElementById(`reps-${exId}`);
+
+      const weight = parseFloat(weightInput.value) || 0;
+      const reps = parseInt(repsInput.value) || 0;
+
+      if (reps <= 0 && weight <= 0) {
+        alert('Please enter a valid weight or reps.');
+        return;
+      }
+
+      if (!workoutState[exId]) workoutState[exId] = [];
+      workoutState[exId].push({ weight, reps, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+
+      localStorage.setItem('atg_current_workout', JSON.stringify(workoutState));
+      renderWorkoutView();
+
+      // Trigger rest timer default to 90s
+      startTimer(90);
+    }
+
+    function removeSet(exId, index) {
+      if (workoutState[exId]) {
+        workoutState[exId].splice(index, 1);
+        if (workoutState[exId].length === 0) delete workoutState[exId];
+        localStorage.setItem('atg_current_workout', JSON.stringify(workoutState));
+        renderWorkoutView();
+      }
+    }
+
+    function clearCurrentSession() {
+      if (confirm('Clear today\'s logged sets?')) {
+        workoutState = {};
+        localStorage.removeItem('atg_current_workout');
+        renderWorkoutView();
+      }
+    }
+
+    function finishSession() {
+      const currentExercises = WORKOUT_ROUTINES[currentDay];
+      const activeKeys = currentExercises.map(e => e.id);
+      const dayLogs = {};
+      let totalSets = 0;
+
+      activeKeys.forEach(k => {
+        if (workoutState[k] && workoutState[k].length > 0) {
+          dayLogs[k] = workoutState[k];
+          totalSets += workoutState[k].length;
+        }
+      });
+
+      if (totalSets === 0) {
+        alert(`Log at least one set for ${currentDay} before saving.`);
+        return;
+      }
+
+      const session = {
+        id: Date.now(),
+        day: currentDay,
+        date: new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
+        totalSets,
+        data: dayLogs
+      };
+
+      workoutHistory.unshift(session);
+      localStorage.setItem('atg_history', JSON.stringify(workoutHistory));
+
+      // Clear logged sets for current day from state
+      activeKeys.forEach(k => delete workoutState[k]);
+      localStorage.setItem('atg_current_workout', JSON.stringify(workoutState));
+
+      renderWorkoutView();
+      renderHistoryView();
+      switchTab('history');
+    }
+
+    function exportCSV() {
+      if (workoutHistory.length === 0) {
+        alert('No data to export.');
+        return;
+      }
+
+      const allExercises = [].concat(...Object.values(WORKOUT_ROUTINES));
+      let csv = 'Date,Day,Exercise,Set,Weight (kg),Reps\n';
+      workoutHistory.forEach(session => {
+        Object.entries(session.data).forEach(([exId, sets]) => {
+          const ex = allExercises.find(e => e.id === exId);
+          const name = ex ? ex.name.replace(/,/g, '') : exId;
+          sets.forEach((set, idx) => {
+            csv += `"${session.date}","${session.day || ''}","${name}",${idx + 1},${set.weight},${set.reps}\n`;
+          });
+        });
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `atg_btb_workout_log_${new Date().toISOString().slice(0, 10)}.csv`);
+      a.click();
+    }
+
+    // --- REST TIMER FUNCTIONALITY ---
+    function startTimer(seconds) {
+      clearInterval(timerInterval);
+      timerRemaining = seconds;
+      document.getElementById('timer-widget').classList.remove('hidden');
+      document.getElementById('timer-widget').classList.add('flex');
+      updateTimerDisplay();
+
+      timerInterval = setInterval(() => {
+        timerRemaining--;
+        updateTimerDisplay();
+
+        if (timerRemaining <= 0) {
+          clearInterval(timerInterval);
+          playTimerBeep();
+          alert('Rest Timer Complete! Time for your next set.');
+          stopTimer();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(timerRemaining / 60);
+      const secs = timerRemaining % 60;
+      document.getElementById('timer-display').innerText = 
+        `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      document.getElementById('timer-widget').classList.add('hidden');
+      document.getElementById('timer-widget').classList.remove('flex');
+    }
+
+    function playTimerBeep() {
+      try {
+        const synth = new Tone.Synth().toDestination();
+        synth.triggerAttackRelease("C5", "8n");
+      } catch (e) {
+        // Fallback Web Audio API if Tone fails
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        osc.connect(ctx.destination);
+        osc.frequency.value = 523.25; // C5
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      }
+    }
+
+    // --- TAB NAVIGATION ---
+    function switchTab(tab) {
+      ['workout', 'directory', 'history'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.add('hidden');
+        document.getElementById(`nav-${t}`).classList.remove('text-brand-500');
+        document.getElementById(`nav-${t}`).classList.add('text-slate-400');
+      });
+
+      document.getElementById(`view-${tab}`).classList.remove('hidden');
+      document.getElementById(`nav-${tab}`).classList.add('text-brand-500');
+      document.getElementById(`nav-${tab}`).classList.remove('text-slate-400');
+    }
+
+    // --- INLINE SERVICE WORKER & PWA REGISTRATION ---
+    function initPWA() {
+      // Inline Service Worker via Blob URL
+      const swCode = `
+        const CACHE_NAME = 'atg-pwa-v1';
+        self.addEventListener('install', (e) => {
+          e.waitUntil(self.skipWaiting());
+        });
+        self.addEventListener('activate', (e) => {
+          e.waitUntil(self.clients.claim());
+        });
+        self.addEventListener('fetch', (e) => {
+          e.respondWith(
+            fetch(e.request).catch(() => caches.match(e.request))
+          );
+        });
+      `;
+
+      if ('serviceWorker' in navigator) {
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl)
+          .then(() => console.log('Inline SW registered successfully'))
+          .catch(err => console.log('SW registration error:', err));
+      }
+    }
+  </script>
+</body>
+</html>
