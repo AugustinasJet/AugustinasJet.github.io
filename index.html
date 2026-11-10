@@ -2,95 +2,200 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ATG + BTB Workout Tracker</title>
-    <!-- PWA Manifest & Meta -->
     <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="ATG Tracker">
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        dark: {
-                            bg: '#0f172a',
-                            card: '#1e293b',
-                            border: '#334155',
-                            text: '#f8fafc',
-                            muted: '#94a3b8'
-                        }
-                    }
-                }
-            }
-        }
+            theme: { extend: { colors: { dark: {
+                bg: '#0f172a', card: '#1e293b', border: '#334155',
+                text: '#f8fafc', muted: '#94a3b8'
+            } } } }
+        };
     </script>
 </head>
-<body class="bg-dark-bg text-dark-text min-h-screen font-sans antialiased pb-24 select-none">
-
-    <!-- Top Header -->
-    <header class="sticky top-0 z-40 bg-dark-card/90 backdrop-blur-md border-b border-dark-border px-4 py-3">
-        <div class="max-w-md mx-auto flex items-center justify-between">
+<body class="min-h-screen bg-dark-bg pb-10 font-sans text-dark-text antialiased">
+    <header class="sticky top-0 z-10 border-b border-dark-border bg-dark-card/95 px-4 py-3 backdrop-blur">
+        <div class="mx-auto flex max-w-md items-center justify-between">
             <div>
-                <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                    <span>⚡</span> ATG + BTB Logger
-                </h1>
-                <p class="text-xs text-dark-muted" id="header-subtitle">Select your workout day</p>
+                <h1 class="text-lg font-bold text-white">⚡ ATG + BTB Logger</h1>
+                <p id="header-subtitle" class="text-xs text-dark-muted">Select your workout day</p>
             </div>
-            <div class="flex items-center gap-2">
-                <button onclick="exportCSV()" class="px-2.5 py-1.5 bg-dark-border hover:bg-slate-700 text-white rounded-lg text-xs font-medium transition active:scale-95 flex items-center gap-1">
-                    <span>📥</span> CSV
-                </button>
-            </div>
+            <button id="export-button" type="button" class="rounded-lg bg-dark-border px-3 py-2 text-xs font-medium text-white hover:bg-slate-700">📥 CSV</button>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-md mx-auto px-4 pt-4">
-
-        <!-- Day Selector Tabs -->
-        <div class="grid grid-cols-3 gap-2 mb-5 bg-dark-card p-1.5 rounded-2xl border border-dark-border">
-            <button onclick="switchDay('monday')" id="tab-monday" class="py-2.5 text-xs font-bold rounded-xl transition text-center shadow-sm">Monday</button>
-            <button onclick="switchDay('thursday')" id="tab-thursday" class="py-2.5 text-xs font-bold rounded-xl transition text-center shadow-sm">Thursday</button>
-            <button onclick="switchDay('friday')" id="tab-friday" class="py-2.5 text-xs font-bold rounded-xl transition text-center shadow-sm">Friday</button>
-        </div>
-
-        <!-- Workout Routine Container -->
-        <div id="exercise-list" class="space-y-3.5">
-            <!-- Dynamically populated -->
-        </div>
-
+    <main class="mx-auto max-w-md px-4 pt-4">
+        <nav aria-label="Workout day" class="mb-5 grid grid-cols-3 gap-2 rounded-2xl border border-dark-border bg-dark-card p-1.5">
+            <button type="button" data-day="monday" class="day-tab rounded-xl py-2.5 text-xs font-bold">Monday</button>
+            <button type="button" data-day="thursday" class="day-tab rounded-xl py-2.5 text-xs font-bold">Thursday</button>
+            <button type="button" data-day="friday" class="day-tab rounded-xl py-2.5 text-xs font-bold">Friday</button>
+        </nav>
+        <section id="exercise-list" aria-live="polite" class="space-y-3.5"></section>
     </main>
 
-    <!-- Rest Timer Floating Card -->
-    <div id="timer-card" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-slate-900/95 backdrop-blur-xl border border-sky-500/30 rounded-2xl p-3 shadow-2xl z-50 flex items-center justify-between hidden transition-all duration-300">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-lg" id="timer-display">90</div>
-            <div>
-                <p class="text-xs font-semibold text-white" id="timer-label">Rest Timer</p>
-                <p class="text-[10px] text-dark-muted">Tap to adjust</p>
-            </div>
-        </div>
-        <div class="flex items-center gap-1.5">
-            <button onclick="adjustTimer(-15)" class="w-8 h-8 rounded-lg bg-dark-border text-white text-xs font-bold active:scale-95">-15s</button>
-            <button onclick="adjustTimer(15)" class="w-8 h-8 rounded-lg bg-dark-border text-white text-xs font-bold active:scale-95">+15s</button>
-            <button onclick="stopTimer()" class="px-3 h-8 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-xs font-bold active:scale-95">Stop</button>
-        </div>
-    </div>
+    <script>
+        const workouts = {
+            monday: {
+                title: 'Monday: Lower & Upper Base',
+                exercises: [
+                    { id: 'm1', name: 'Backward Sled / Walk', target: '5 mins', starter: 'Light / Bodyweight', cues: 'Keep core tight, push through balls of feet or pull sled smoothly. Continuous aerobic pace.' },
+                    { id: 'm2', name: 'Tibialis Raises', target: '2 × 15-20', starter: 'Light bar / Bodyweight', cues: 'Full dorsiflexion. Bring toes all the way up toward shins with controlled lowering.' },
+                    { id: 'm3', name: 'Slant Board Calf Raises', target: '2 × 15', starter: 'Bodyweight', cues: 'Full stretch at bottom, pause 1 second, explode up to peak plantarflexion.' },
+                    { id: 'm4', name: 'Poliquin / Patrick Step-Ups', target: '2 × 12-15', starter: 'Bodyweight / light DBs', cues: 'Knee travels forward over toe. Control the descent and tap heel lightly.' },
+                    { id: 'm5', name: 'DB Incline Bench Press', target: '3 × 6-8', starter: '16-20 kg DBs', cues: 'Full stretch at bottom, elbows at ~45 degrees, press with control.' },
+                    { id: 'm6', name: 'Heel-Elevated Goblet Squats', target: '3 × 8-10', starter: '16-24 kg Kettlebell', cues: 'Upright torso, deep ATG depth, knees tracking over toes.' },
+                    { id: 'm7', name: 'Overhead DB Shoulder Press', target: '3 × 8-10', starter: '14-16 kg DBs', cues: 'Full range from shoulders to overhead lock without arching lower back.' },
+                    { id: 'm8', name: 'Triceps Overhead Extension', target: '3 × 10-12', starter: '12-16 kg DB/Cable', cues: 'Keep elbows pointed up and close to head for deep tricep stretch.' },
+                    { id: 'm9', name: 'Couch Stretch', target: '2 × 45s/side', starter: 'Bodyweight', cues: 'Knee tight against wall, glute squeezed, hip flexor and quad open.' }
+                ]
+            },
+            thursday: {
+                title: 'Thursday: Knees & Upper Volume',
+                exercises: [
+                    { id: 't1', name: 'Backward Sled / Walk', target: '5 mins', starter: 'Light / Bodyweight', cues: 'Smooth continuous motion to flush blood into the knees.' },
+                    { id: 't2', name: 'Tibialis Raises', target: '2 × 15-20', starter: 'Light bar / Bodyweight', cues: 'Full contraction on every rep. Burn in the shin is normal.' },
+                    { id: 't3', name: 'Slant Board Calf Raises', target: '2 × 15', starter: 'Bodyweight', cues: 'Deep stretch at bottom, pause before driving up.' },
+                    { id: 't4', name: 'Poliquin / Patrick Step-Ups', target: '2 × 12-15', starter: 'Bodyweight / light DBs', cues: 'Control descent, keep heel anchored on slant/step.' },
+                    { id: 't5', name: 'DB Bench Press (Flat)', target: '3 × 6-8', starter: '18-22 kg DBs', cues: 'Shoulder blades retracted, full chest stretch.' },
+                    { id: 't6', name: 'ATG Split Squat', target: '3 × 5-8/side', starter: 'Bodyweight / Light DBs', cues: 'Front knee over toe, back knee fully flexed, hip crease below knee.' },
+                    { id: 't7', name: 'Seated DB Shoulder Press', target: '3 × 8-10', starter: '14-16 kg DBs', cues: 'Strict form, smooth reversal at bottom.' },
+                    { id: 't8', name: 'Biceps Curls', target: '3 × 10-12', starter: '12-14 kg DBs', cues: 'Full extension at bottom, squeeze biceps at top.' },
+                    { id: 't9', name: 'Elephant Walk / Hamstring Stretch', target: '2 × 1m', starter: 'Bodyweight', cues: 'Hinged forward fold, alternating knee bends to stretch hamstrings.' }
+                ]
+            },
+            friday: {
+                title: 'Friday: Posterior Chain & Strength',
+                exercises: [
+                    { id: 'f1', name: 'Backward Sled / Walk', target: '5 mins', starter: 'Light / Bodyweight', cues: 'Warm-up knees and lower body tissues.' },
+                    { id: 'f2', name: 'Tibialis Raises', target: '2 × 15-20', starter: 'Light bar / Bodyweight', cues: 'High rep endurance for shin muscles.' },
+                    { id: 'f3', name: 'Slant Board Calf Raises', target: '2 × 15', starter: 'Bodyweight', cues: 'Full range calf isolation.' },
+                    { id: 'f4', name: 'ATG Lunges / Step-Ups', target: '2 × 12-15', starter: 'Bodyweight / light DBs', cues: 'Deep knee bend and hip opening.' },
+                    { id: 'f5', name: 'DB Rows / Chest Supported Rows', target: '3 × 8-10', starter: '18-24 kg DBs', cues: 'Pull to hip, squeeze upper back, controlled negative.' },
+                    { id: 'f6', name: 'RDL (Romanian Deadlifts)', target: '3 × 8-10', starter: '40-60 kg Barbell / DBs', cues: 'Hips back, flat back, intense hamstring stretch.' },
+                    { id: 'f7', name: 'Lat Pulldowns / Pull-ups', target: '3 × 8-10', starter: 'Moderate / Bodyweight', cues: 'Drive elbows down, chest proud.' },
+                    { id: 'f8', name: 'Face Pulls', target: '3 × 15', starter: 'Light Cable', cues: 'Pull to eyes, external rotation for shoulder health.' },
+                    { id: 'f9', name: 'Pancake / LCL Stretch', target: '2 × 1m', starter: 'Bodyweight', cues: 'Adductor and lower back mobility.' }
+                ]
+            }
+        };
 
-    <!-- Log Modal -->
-    <div id="log-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
-        <div class="bg-dark-card border border-dark-border w-full max-w-md rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="text-base font-bold text-white" id="modal-exercise-title">Exercise Name</h3>
-                    <p class="text-xs text-dark-muted" id="modal-exercise-target">Target: 3 × 8-10</p>
-                </div>
-                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-dark-border/50 text-dark-muted hover:text-white flex items-center justify-center text-sm font-bold">✕</button>
-            </div>
+        let currentDay = 'monday';
+        let workoutLogs = loadLogs();
 
-            <div id="last-log-hint" class="mb-4
+        function loadLogs() {
+            try {
+                return JSON.parse(localStorage.getItem('atg_workout_logs') || '{}') || {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function renderDay() {
+            const routine = workouts[currentDay];
+            document.getElementById('header-subtitle').textContent = routine.title;
+            document.querySelectorAll('.day-tab').forEach(button => {
+                const selected = button.dataset.day === currentDay;
+                button.className = 'day-tab rounded-xl py-2.5 text-xs font-bold transition ' +
+                    (selected ? 'bg-sky-600 text-white shadow-sm' : 'text-dark-muted hover:text-white');
+                button.setAttribute('aria-pressed', String(selected));
+            });
+
+            const list = document.getElementById('exercise-list');
+            list.replaceChildren();
+            routine.exercises.forEach((exercise, index) => {
+                const card = document.createElement('article');
+                card.className = 'rounded-2xl border border-dark-border bg-dark-card p-4 shadow-sm';
+
+                const heading = document.createElement('div');
+                heading.className = 'flex items-start justify-between gap-3';
+                const details = document.createElement('div');
+                details.className = 'min-w-0 flex-1';
+                const title = document.createElement('h2');
+                title.className = 'text-sm font-bold text-white';
+                title.textContent = `${index + 1}. ${exercise.name}`;
+                const target = document.createElement('p');
+                target.className = 'mt-1.5 text-xs font-medium text-slate-300';
+                target.textContent = `🎯 ${exercise.target}  ·  💡 ${exercise.starter}`;
+                details.append(title, target);
+                const logButton = document.createElement('button');
+                logButton.type = 'button';
+                logButton.dataset.exerciseId = exercise.id;
+                logButton.className = 'shrink-0 rounded-xl bg-sky-600 px-3 py-2 text-xs font-bold text-white hover:bg-sky-500';
+                logButton.textContent = 'Log';
+                logButton.setAttribute('aria-label', `Log a set of ${exercise.name}`);
+                heading.append(details, logButton);
+                card.append(heading);
+
+                const cues = document.createElement('p');
+                cues.className = 'mt-2 text-xs leading-relaxed text-dark-muted';
+                cues.textContent = exercise.cues;
+                card.append(cues);
+
+                const logs = workoutLogs[exercise.id] || [];
+                if (logs.length) {
+                    const recent = document.createElement('p');
+                    recent.className = 'mt-2 border-t border-dark-border pt-2 text-xs text-sky-400';
+                    recent.textContent = 'Recent: ' + logs.slice(-3).reverse().map(log => `${log.weight} kg × ${log.reps}`).join('  ·  ');
+                    card.append(recent);
+                }
+                list.append(card);
+            });
+        }
+
+        function logSet(id) {
+            const weight = window.prompt('Weight (kg):');
+            if (weight === null || weight.trim() === '' || !Number.isFinite(Number(weight))) return;
+            const reps = window.prompt('Reps:');
+            if (reps === null || reps.trim() === '' || !Number.isInteger(Number(reps))) return;
+            if (!workoutLogs[id]) workoutLogs[id] = [];
+            workoutLogs[id].push({ date: new Date().toISOString(), day: currentDay, weight: Number(weight), reps: Number(reps) });
+            try {
+                localStorage.setItem('atg_workout_logs', JSON.stringify(workoutLogs));
+            } catch (error) {
+                window.alert('Could not save your log in this browser.');
+            }
+            renderDay();
+        }
+
+        function exportCSV() {
+            const quote = value => `"${String(value).replaceAll('"', '""')}"`;
+            const rows = [['ExerciseID', 'Day', 'Date', 'Weight', 'Reps']];
+            Object.entries(workoutLogs).forEach(([id, logs]) => logs.forEach(log => {
+                rows.push([id, log.day, log.date, log.weight, log.reps]);
+            }));
+            const csv = rows.map(row => row.map(quote).join(',')).join('\n');
+            const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `atg_workout_logs_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        document.querySelectorAll('.day-tab').forEach(button => {
+            button.addEventListener('click', () => {
+                currentDay = button.dataset.day;
+                try { localStorage.setItem('atg_current_day', currentDay); } catch (error) { /* storage is optional */ }
+                renderDay();
+            });
+        });
+        document.getElementById('exercise-list').addEventListener('click', event => {
+            const button = event.target.closest('button[data-exercise-id]');
+            if (button) logSet(button.dataset.exerciseId);
+        });
+        document.getElementById('export-button').addEventListener('click', exportCSV);
+
+        try {
+            const savedDay = localStorage.getItem('atg_current_day');
+            if (savedDay && workouts[savedDay]) currentDay = savedDay;
+        } catch (error) { /* use Monday when storage is unavailable */ }
+        renderDay();
+    </script>
+</body>
+</html>
